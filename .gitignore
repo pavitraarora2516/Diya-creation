@@ -1,0 +1,22 @@
+# dependencies
+**/node_modules
+/.pnp
+.pnp.*
+
+# builds
+**/dist
+**/.next
+**/out
+**/build
+
+# env files
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.production.example
+!**/*.example
+
+# debug logs
+**/*.log
+**/*.tsbuildinfo
+**/*.pem
