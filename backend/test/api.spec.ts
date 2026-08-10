@@ -145,6 +145,12 @@ const mockPrismaService = {
   coupon: {
     findUnique: jest.fn().mockResolvedValue(null),
   },
+  wishlist: {
+    findMany: jest.fn().mockResolvedValue([]),
+    findFirst: jest.fn().mockResolvedValue(null),
+    create: jest.fn().mockResolvedValue({ id: 'wishlist-uuid', userId: mockUser.id, productId: 'product-uuid' }),
+    delete: jest.fn().mockResolvedValue({ id: 'wishlist-uuid' }),
+  },
 };
 
 // ─── Mock JwtService ──────────────────────────────────────────────────────────
@@ -415,6 +421,40 @@ describe('Diya Creation API - Integration Tests', () => {
         .post('/api/corporate/lead')
         .send({ companyName: 'Test Corp' }); // missing many required fields
       expect(res.status).toBe(400);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 8. Wishlist — Requires Auth
+  // ═══════════════════════════════════════════════════════════════════════════
+  describe('Wishlist (Authenticated)', () => {
+    it('GET /api/wishlist should return 401 without a token', async () => {
+      const res = await request(app.getHttpServer()).get('/api/wishlist');
+      expect(res.status).toBe(401);
+    });
+
+    it('GET /api/wishlist should return 200 with a valid token', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/api/wishlist')
+        .set('Authorization', `Bearer ${customerToken}`);
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+    });
+
+    it('POST /api/wishlist/:productId should return 201 with a valid token', async () => {
+      mockPrismaService.product.findUnique.mockResolvedValueOnce({ id: 'product-uuid' });
+      const res = await request(app.getHttpServer())
+        .post('/api/wishlist/product-uuid')
+        .set('Authorization', `Bearer ${customerToken}`);
+      expect(res.status).toBe(201);
+    });
+
+    it('DELETE /api/wishlist/:productId should return 200 with a valid token', async () => {
+      mockPrismaService.wishlist.findFirst.mockResolvedValueOnce({ id: 'wishlist-uuid' });
+      const res = await request(app.getHttpServer())
+        .delete('/api/wishlist/product-uuid')
+        .set('Authorization', `Bearer ${customerToken}`);
+      expect(res.status).toBe(200);
     });
   });
 });
